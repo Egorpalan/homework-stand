@@ -15,6 +15,7 @@ import (
 	"analytic-service/config"
 	"analytic-service/internal/applicaton/service"
 	"analytic-service/internal/infrastructure/storage"
+	"analytic-service/internal/pkg/chaos/mode"
 
 	"analytic-service/internal/infrastructure/messagebus"
 	"analytic-service/internal/pkg/closer"
@@ -52,6 +53,9 @@ type App struct {
 
 	// обработчик health check probe
 	healthCheck healthcheck.Handler
+
+	// состояние, для эмуляции проблем с сервисом
+	workloadMode *mode.Store
 }
 
 // New конструктор
@@ -59,6 +63,7 @@ func New(ctx context.Context) *App {
 	app := &App{
 		publicCloser: closer.New(syscall.SIGTERM, syscall.SIGINT),
 		adminCloser:  closer.New(),
+		workloadMode: mode.NewStore(),
 	}
 
 	// init admin server

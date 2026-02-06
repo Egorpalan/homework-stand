@@ -17,6 +17,7 @@ import (
 	"profile-service/internal/infrastructure/adapter"
 	"profile-service/internal/infrastructure/gateway"
 	"profile-service/internal/infrastructure/storage"
+	"profile-service/internal/pkg/chaos/mode"
 	"profile-service/internal/pkg/closer"
 	pkgredis "profile-service/internal/pkg/connector/redis"
 	"profile-service/internal/pkg/healthcheck"
@@ -60,6 +61,9 @@ type App struct {
 
 	// обработчик health check probe
 	healthCheck healthcheck.Handler
+
+	// состояние, для эмуляции проблем с сервисом
+	workloadMode *mode.Store
 }
 
 // New конструктор
@@ -68,6 +72,7 @@ func New(ctx context.Context) *App {
 		grpcConn:     make(map[string]grpc.ClientConnInterface),
 		publicCloser: closer.New(syscall.SIGTERM, syscall.SIGINT),
 		adminCloser:  closer.New(),
+		workloadMode: mode.NewStore(),
 	}
 
 	// init admin server

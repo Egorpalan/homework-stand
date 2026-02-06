@@ -14,6 +14,7 @@ import (
 	"profile-service/internal/infrastructure/adapter"
 	"profile-service/internal/infrastructure/gateway"
 	"profile-service/internal/infrastructure/storage"
+	"profile-service/internal/pkg/chaos"
 	"profile-service/internal/pkg/closer"
 	"profile-service/internal/pkg/connector/postgres"
 	"profile-service/internal/pkg/grpc/intercept"
@@ -22,6 +23,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	chimw "github.com/go-chi/chi/v5/middleware"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"google.golang.org/grpc/credentials/insecure"
 
 	"github.com/not-for-prod/clay/server"
@@ -106,6 +108,7 @@ func (a *App) initAdminServer(ctx context.Context) error {
 	a.adminMux = chi.NewMux()
 
 	a.adminMux.Mount("/debug", chimw.Profiler())
+	a.adminMux.Mount("/metrics", promhttp.Handler())
 
 	// register healthcheck
 	a.adminMux.HandleFunc(healthcheck.LivenessPath, a.healthCheck.LiveEndpoint)
@@ -116,6 +119,8 @@ func (a *App) initAdminServer(ctx context.Context) error {
 
 func (a *App) initMainServer(ctx context.Context) error {
 	a.mainMux = chi.NewMux()
+
+	a.mainMux.HandleFunc("/chaos/set", chaos.ModeSetHandler(a.workloadMode))
 
 	// init server (htt,grpc)
 	a.mainServer = server.NewServer(

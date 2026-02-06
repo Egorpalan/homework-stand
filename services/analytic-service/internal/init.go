@@ -13,6 +13,7 @@ import (
 	"analytic-service/internal/applicaton/service"
 	"analytic-service/internal/infrastructure/messagebus"
 	"analytic-service/internal/infrastructure/storage"
+	"analytic-service/internal/pkg/chaos"
 	"analytic-service/internal/pkg/connector/postgres"
 	"analytic-service/internal/pkg/grpc/intercept"
 	"analytic-service/internal/pkg/healthcheck"
@@ -96,6 +97,8 @@ func (a *App) initAdminServer(ctx context.Context) error {
 func (a *App) initMainServer(ctx context.Context) error {
 	a.mainMux = chi.NewMux()
 
+	a.mainMux.HandleFunc("/chaos/set", chaos.ModeSetHandler(a.workloadMode))
+
 	// init server (htt,grpc)
 	a.mainServer = server.NewServer(
 		config.Instance().GrpcServer.Port,
@@ -110,6 +113,7 @@ func (a *App) initMainServer(ctx context.Context) error {
 			}),
 			grpc.ChainUnaryInterceptor(
 				intercept.ErrorInterceptor(),
+				chaos.ModeInterceptor(a.workloadMode),
 			),
 		),
 	)

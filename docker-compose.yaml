@@ -47,6 +47,7 @@ services:
     ports:
       - "7002:7002"
       - "8082:8080"
+      - "8092:8081"
     stop_grace_period: 10s
     command: ["sleep", "20s"]
     depends_on:
@@ -293,7 +294,7 @@ services:
     command: sh -c "sleep 10 && redis-cli -p 7000 --cluster create \
       profile-redis-oss-1:6000 profile-redis-oss-2:6001 profile-redis-oss-3:6002 \
       profile-redis-oss-4:6003 profile-redis-oss-5:6004 profile-redis-oss-6:6005 \
-      --cluster-replicas 1 --cluster-yes"
+      --cluster-replicas 1 --cluster-yes && sleep 10"
     depends_on:
      - profile-redis-oss-1
      - profile-redis-oss-2

@@ -1,0 +1,1 @@
+{"tag":"profile","call":"/profile_service.order.v1.ProfileService/GetProfile","metadata":{"content-type":["application/grpc"]},"payload":{"user_id":1}}
