@@ -84,7 +84,6 @@ load-run:
 	$(LOCAL_BIN)/framer load  \
 	--addr=localhost:7002 \
 	--requests-file=load/requests.json.binary \
-	--clients 1 \
-	const 10 \
-	--duration 10s \
+	--clients 10 \
+	line 120 1000 50s \
 	--phout=load/report.phout

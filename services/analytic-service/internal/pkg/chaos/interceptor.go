@@ -2,7 +2,6 @@ package chaos
 
 import (
 	"context"
-	"log/slog"
 	"math/rand"
 	"sync"
 	"sync/atomic"
@@ -37,10 +36,7 @@ func ModeInterceptor(store *mode.Store) grpc.UnaryServerInterceptor {
 		info *grpc.UnaryServerInfo,
 		handler grpc.UnaryHandler,
 	) (interface{}, error) {
-
 		method := info.FullMethod
-		slog.Info("method invoked", "method", method)
-
 		md := store.Get(method)
 
 		switch md {

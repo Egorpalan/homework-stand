@@ -14,7 +14,7 @@ func ModeSetHandler(store *mode.Store) http.HandlerFunc {
 		md := mode.Mode(m)
 
 		switch md {
-		case mode.OK, mode.Slow, mode.Error, mode.Flaky, mode.RareError:
+		case mode.OK, mode.Slow, mode.Error, mode.Flaky, mode.RareError, mode.Overload:
 			if method == "" {
 				store.SetGlobal(md)
 				w.Write([]byte("global mode set to " + m))

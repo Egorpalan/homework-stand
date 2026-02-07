@@ -10,6 +10,7 @@ const (
 	RareError Mode = "rare_error"
 	Slow      Mode = "slow"
 	Flaky     Mode = "flaky"
+	Overload  Mode = "overload"
 )
 
 type Store struct {

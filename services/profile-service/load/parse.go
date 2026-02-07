@@ -58,6 +58,8 @@ func main() {
 			code = "OK"
 		case "grpc_8":
 			code = "RESOURCE_EXHAUSTED"
+		case "grpc_14":
+			code = "UNAVAILABLE"
 		default:
 			code = fields[11]
 		}
