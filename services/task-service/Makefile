@@ -18,6 +18,8 @@ dependency:
 	GOBIN=$(LOCAL_BIN) go install gotest.tools/gotestsum@v1.7.0
 	GOBIN=$(LOCAL_BIN) go install github.com/pressly/goose/v3/cmd/goose@latest
 	GOBIN=$(LOCAL_BIN) go install github.com/not-for-prod/xo@latest
+	GOBIN=$(LOCAL_BIN) go install github.com/ozontech/framer/cmd/framer@v0.1.2
+
 
 .PHONY: run
 run:
@@ -71,3 +73,18 @@ xo: migrations-up
 	rm $(XO_OUTPUT_PATH)/goosedbversion.xo.go
 	rm $(XO_OUTPUT_PATH)/xo_db.xo.go
 
+load-convert:
+	$(LOCAL_BIN)/framer convert \
+    --from=ozon.json \
+    --to=ozon.binary \
+    --reflection-addr=localhost:7003 \
+    load/requests.json \
+    load/requests.json.binary
+
+load-run:
+	$(LOCAL_BIN)/framer load  \
+	--addr=localhost:7003 \
+	--requests-file=load/requests.json.binary \
+	--clients 10 \
+	line 120 1000 50s \
+	--phout=load/report.phout

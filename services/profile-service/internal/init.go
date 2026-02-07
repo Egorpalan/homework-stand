@@ -20,7 +20,6 @@ import (
 	"profile-service/internal/pkg/grpc/intercept"
 	"profile-service/internal/pkg/healthcheck"
 	profileV1 "profile-service/internal/pkg/pb/profile-service/profile/v1"
-	"profile-service/internal/pkg/ratelimit"
 
 	"github.com/go-chi/chi/v5"
 	chimw "github.com/go-chi/chi/v5/middleware"
@@ -138,7 +137,6 @@ func (a *App) initMainServer(ctx context.Context) error {
 			grpc.ChainUnaryInterceptor(
 				intercept.ErrorInterceptor(),
 				intercept.ExtractClientNameInterceptor(),
-				ratelimit.NewLimiter(config.Instance().RateLimit).UnaryServerInterceptor(),
 				chaos.ModeInterceptor(a.workloadMode),
 			),
 		),

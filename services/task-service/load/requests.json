@@ -1,0 +1,1 @@
+{"tag":"task-load","call":"/task_service.task.v1.TaskService/CreateTask","metadata":{"content-type":["application/grpc"],"x-client-name":["task-service"]},"payload":{"user_id":1,"category_id": "bug","comment": "load"}}
