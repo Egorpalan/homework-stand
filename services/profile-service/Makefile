@@ -71,3 +71,20 @@ xo: migrations-up
 	-o $(XO_OUTPUT_PATH) --template-path $(XO_TEMPLATE_PATH) --schema public --suffix ".xo.go" --custom-type-package custom
 	rm $(XO_OUTPUT_PATH)/goosedbversion.xo.go
 	rm $(XO_OUTPUT_PATH)/xo_db.xo.go
+
+load-convert:
+	$(LOCAL_BIN)/framer convert \
+    --from=ozon.json \
+    --to=ozon.binary \
+    --reflection-addr=localhost:7003 \
+    load/requests.json \
+    load/requests.json.binary
+
+load-run:
+	$(LOCAL_BIN)/framer load  \
+	--addr=localhost:7003 \
+	--requests-file=load/requests.json.binary \
+	--clients 1 \
+	const 10 \
+	--duration 10s \
+	--phout=load/report.phout

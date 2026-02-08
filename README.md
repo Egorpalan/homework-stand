@@ -154,6 +154,9 @@ const (
 Имя метода можно посмотреть в директории `pkg/pb`. В сгенерированных файлах можно найти имя метода.
 Пример: 
 
+> ВАЖНО: grpc-gateway работает таким образом, что входящий http трафик пропускать через interceptor'ы. Он подхватывает только middleware. 
+> Для простоты я не стал делать http-middleware. Так что проверить режим можно только вызовов rpc обработчика на порту 7004 (через grpcui). Полностью эмулируя межсервисное взаимодействие по протоколу gRPC.
+
 ```go
 const (
 	AnalyticService_GetUserTaskCount_FullMethodName = "/analytic_service.order.v1.AnalyticService/GetUserTaskCount"
