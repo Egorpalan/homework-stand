@@ -76,13 +76,13 @@ load-convert:
 	$(LOCAL_BIN)/framer convert \
     --from=ozon.json \
     --to=ozon.binary \
-    --reflection-addr=localhost:7003 \
+    --reflection-addr=localhost:7002 \
     load/requests.json \
     load/requests.json.binary
 
 load-run:
 	$(LOCAL_BIN)/framer load  \
-	--addr=localhost:7003 \
+	--addr=localhost:7002 \
 	--requests-file=load/requests.json.binary \
 	--clients 1 \
 	const 10 \
