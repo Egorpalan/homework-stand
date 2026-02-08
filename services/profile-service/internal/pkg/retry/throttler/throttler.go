@@ -32,11 +32,6 @@ func (rt *Throttler) Throttle() bool {
 	rt.mu.Lock()
 	defer rt.mu.Unlock()
 
-	// если перешли за минимальный порог - retry запрещен, т.к исчерпали бюджет
-	if rt.tokens <= rt.thresh {
-		return true
-	}
-
 	// вычитаем токен
 	rt.tokens--
 	// если ушли в овердрафт - закидываем в 0
@@ -44,7 +39,8 @@ func (rt *Throttler) Throttle() bool {
 		rt.tokens = 0
 	}
 
-	return false
+	// если перешли за минимальный порог - retry запрещен, т.к исчерпали бюджет
+	return rt.tokens <= rt.thresh
 }
 
 // SuccessfulRPC засчитывает успешный rpc запрос

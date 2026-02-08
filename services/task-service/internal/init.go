@@ -65,6 +65,14 @@ func (a *App) initStorages(ctx context.Context) error {
 	// TODO: тут я хочу убедиться,что данные по категориям успешно инициализированы.
 	//  После этого приложение может стартовать
 	// Но какому типу пробы подходит эта задача?
+
+	a.healthCheck.AddReadinessCheck("file", func() error {
+		if a.storages.Category.IsLoaded() {
+			return nil
+		}
+
+		return fmt.Errorf("abc")
+	})
 	return nil
 }
 
