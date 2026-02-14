@@ -6,28 +6,32 @@ import (
 	"log/slog"
 
 	"analytic-service/internal/applicaton/service/task/accept_task"
-	"analytic-service/internal/infrastructure/messagebus/subscriber/scheme/task_events/task_created/event"
 
-	"github.com/IBM/sarama"
 	"github.com/gofrs/uuid"
 	"github.com/shopspring/decimal"
 )
+
+const eventTypeTaskCreated = "task-created"
 
 type TaskCreator interface {
 	Create(ctx context.Context, request accept_task.CreateTaskRequest) error
 }
 
-type MessageHandler struct {
+type Handler struct {
 	creator TaskCreator
 }
 
-func NewMessageHandler(creator TaskCreator) *MessageHandler {
-	return &MessageHandler{creator: creator}
+func NewMessageHandler(creator TaskCreator) *Handler {
+	return &Handler{creator: creator}
 }
 
-func (h *MessageHandler) Handle(ctx context.Context, _ sarama.ConsumerGroupSession, message *sarama.ConsumerMessage) error {
-	// десереализуем сообщение
-	deserialized, err := event.Deserialize(message)
+// EventType возвращает тип ивента
+func (h *Handler) EventType() string {
+	return eventTypeTaskCreated
+}
+
+func (h *Handler) HandleEvent(ctx context.Context, payload []byte) error {
+	deserialized, err := deserialize(payload)
 	if err != nil {
 		slog.Error(fmt.Sprintf("Ошибка десереализации сообщения: %s", err.Error()))
 		return err
