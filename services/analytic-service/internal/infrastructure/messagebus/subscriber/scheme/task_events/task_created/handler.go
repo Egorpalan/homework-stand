@@ -2,10 +2,12 @@ package task_created
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
 
 	"analytic-service/internal/applicaton/service/task/accept_task"
+	"analytic-service/internal/pkg/msgbus/subscriber/retry"
 
 	"github.com/gofrs/uuid"
 	"github.com/shopspring/decimal"
@@ -34,12 +36,18 @@ func (h *Handler) HandleEvent(ctx context.Context, payload []byte) error {
 	deserialized, err := deserialize(payload)
 	if err != nil {
 		slog.Error(fmt.Sprintf("Ошибка десереализации сообщения: %s", err.Error()))
-		return err
+		// Malformed payload can never be fixed by retrying — go straight to DLQ.
+		return retry.DLQErr(err)
 	}
 
 	amount, err := decimal.NewFromString(deserialized.Price)
 	if err != nil {
-		return err
+		// Invalid price format is a permanent data error — go straight to DLQ.
+		return retry.DLQErr(fmt.Errorf("invalid price %q: %w", deserialized.Price, err))
+	}
+
+	if amount.LessThan(decimal.NewFromInt(90)) {
+		return errors.New("amount is less than 90")
 	}
 
 	return h.creator.Create(ctx, accept_task.NewCreateTaskRequest(

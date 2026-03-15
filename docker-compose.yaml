@@ -429,6 +429,12 @@ services:
 
         echo "Creating topic task-events..."
         kafka-topics --bootstrap-server kafka:9092 --create --topic task-events --partitions 3 --replication-factor 1
+
+        echo "Creating topic task-events-retry-30s..."
+        kafka-topics --bootstrap-server kafka:9092 --create --topic task-events-retry-30s --partitions 3 --replication-factor 1
+
+        echo "Creating topic task-events-dlq..."
+        kafka-topics --bootstrap-server kafka:9092 --create --topic task-events-dlq --partitions 3 --replication-factor 1
     networks:
       - app-network
 
