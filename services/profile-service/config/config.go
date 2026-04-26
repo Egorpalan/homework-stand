@@ -7,6 +7,7 @@ import (
 	"strings"
 	"sync"
 
+	"profile-service/internal/pkg/circuit"
 	"profile-service/internal/pkg/timeout"
 
 	"github.com/ilyakaznacheev/cleanenv"
@@ -35,6 +36,7 @@ type Config struct {
 
 	Graceful Graceful          `yaml:"graceful"`
 	Targets  map[string]string `yaml:"service"`
+	Circuit  circuit.Config    `yaml:"circuit"`
 }
 
 func Instance() *Config {

@@ -1,6 +1,7 @@
 package circuit
 
 import (
+	"context"
 	"errors"
 
 	"google.golang.org/grpc/codes"
@@ -22,22 +23,33 @@ var errorCodeMap = map[string]codes.Code{
 	"Unavailable":       codes.Unavailable,
 }
 
-func triggerOnError(err error, codes []string, codesSet map[codes.Code]struct{}) bool {
+// triggerOnError возвращает true, если ошибку нужно учитывать как сбой для CB.
+// Отмена клиентом (Canceled) и чистый context.Canceled не считаются сбоем внешнего сервиса.
+func triggerOnError(err error, failureCodeNames []string, codesSet map[codes.Code]struct{}) bool {
+
 	if err == nil {
 		return false
 	}
 
-	// Пытаемся получить gRPC-статус
+	if errors.Is(err, context.Canceled) {
+		return false
+	}
+
 	st, ok := status.FromError(err)
-	if !ok {
-		// Не gRPC-ошибка — считаем за сбой, если список кодов не задан
-		return len(codes) == 0
+	if ok {
+		if st.Code() == codes.Canceled {
+			return false
+		}
+	} else {
+		// Не gRPC-ошибка: как в исходной логике — сбой только если нет списка кодов
+		// (иначе нельзя корректно сопоставить с failure_codes).
+		return len(failureCodeNames) == 0
 	}
 
 	code := st.Code()
 
 	// Если фильтрация не задана — считаем всё ошибками
-	if len(codes) == 0 {
+	if len(failureCodeNames) == 0 {
 		return true
 	}
 

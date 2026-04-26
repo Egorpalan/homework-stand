@@ -7,6 +7,8 @@ import (
 
 	"github.com/sony/gobreaker/v2"
 	"google.golang.org/grpc"
+
+	"profile-service/internal/pkg/circuit/metrics"
 )
 
 // UnaryClientInterceptor унарный клиентский перехватчик
@@ -23,17 +25,19 @@ func (b *Breaker) UnaryClientInterceptor() grpc.UnaryClientInterceptor {
 		})
 
 		if err != nil {
-			// Если это ошибка circuit breaker, возвращаем ее
-			if errors.Is(err, gobreaker.ErrOpenState) {
+			switch {
+			case errors.Is(err, gobreaker.ErrOpenState):
+				metrics.IncRequestOutcome(method, "circuit_open")
 				return ErrCircuitIsOpen
-			}
-
-			if errors.Is(err, gobreaker.ErrTooManyRequests) {
+			case errors.Is(err, gobreaker.ErrTooManyRequests):
+				metrics.IncRequestOutcome(method, "too_many_requests")
 				return ErrTooManyRequests
+			default:
+				metrics.IncRequestOutcome(method, "upstream_error")
+				return err
 			}
-
-			return err
 		}
+		metrics.IncRequestOutcome(method, "success")
 		return nil
 	}
 }

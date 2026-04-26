@@ -13,7 +13,8 @@ type Profile struct {
 	IsTaskAllowed bool
 	CreatedAt     time.Time
 
-	Tariff value_object.Tariff
+	Tariff         value_object.Tariff
+	TariffDegraded bool
 }
 
 // NewProfile конструктор для сущности
@@ -32,8 +33,13 @@ func (p *Profile) AllowTask(value bool) {
 	p.IsTaskAllowed = value
 }
 
-func (p *Profile) WithTariff(taskCount uint64) {
-	// если задач [0,5] -> base
+func (p *Profile) WithTariff(taskCount uint64, countOK bool) {
+	if !countOK {
+		p.Tariff = value_object.TariffBase
+		p.TariffDegraded = true
+		return
+	}
+	p.TariffDegraded = false
 	switch {
 	case taskCount >= 0 && taskCount <= 5:
 		p.Tariff = value_object.TariffBase

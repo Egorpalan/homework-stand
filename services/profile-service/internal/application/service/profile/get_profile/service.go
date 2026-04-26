@@ -2,6 +2,7 @@ package get_profile
 
 import (
 	"context"
+	"log/slog"
 
 	"profile-service/internal/domain/entity"
 )
@@ -33,10 +34,15 @@ func (s *Service) GetProfile(ctx context.Context, userID int64) (*entity.Profile
 	// получаем кол-во задач
 	taskCount, err := s.taskProvider.GetUserTaskCount(ctx, userID)
 	if err != nil {
-		return nil, err
+		slog.Error("analytic: get user task count failed, fallback to base tariff",
+			"user_id", userID,
+			"err", err,
+		)
+		profile.WithTariff(0, err == nil)
+		return profile, nil
 	}
 
-	profile.WithTariff(taskCount)
+	profile.WithTariff(taskCount, err == nil)
 
 	return profile, nil
 }

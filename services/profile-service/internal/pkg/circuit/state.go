@@ -6,6 +6,8 @@ import (
 
 	"github.com/samber/lo"
 	"github.com/sony/gobreaker/v2"
+
+	"profile-service/internal/pkg/circuit/metrics"
 )
 
 type cbStateByHandlers struct {
@@ -65,6 +67,8 @@ func newInternalState(config MainConfig, name string) *internalState {
 		},
 		OnStateChange: func(name string, from, to gobreaker.State) {
 			slog.Info(fmt.Sprintf("circuit breaker '%s' changed state: %s → %s", name, from, to))
+			metrics.IncStateTransition(name, from.String(), to.String())
+			metrics.SetBreakerOpen(name, to == gobreaker.StateOpen)
 		},
 		IsSuccessful: func(err error) bool {
 			return !triggerOnError(err, config.FailureCodes, config.failureCodeSet())
