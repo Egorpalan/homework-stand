@@ -53,7 +53,10 @@ retry:
       max_backoff: 100ms
       backoff_multiplier: 1.5
       throttler:
-        throttling_enabled: false
+        throttling_enabled: true
+        # ~10 RPS нагрузки × 0.1 = 1 retry/сек; бюджет на ~10 сек «помучиться»
+        throttle_max_tokens: 10
+        throttle_token_ratio: 0.1
       retryable_codes:
         - Unavailable
 
