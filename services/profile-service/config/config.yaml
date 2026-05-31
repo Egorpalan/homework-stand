@@ -60,3 +60,11 @@ retry:
       retryable_codes:
         - Unavailable
 
+rate_limit:
+  rules:
+    - clients: ["task-service"]
+      handlers: ["/profile_service.order.v1.ProfileService/CheckPermission"]
+      limit: 40
+      burst: 60
+      timeout: 280ms
+

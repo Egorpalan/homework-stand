@@ -7,6 +7,7 @@ import (
 	"strings"
 	"sync"
 
+	"profile-service/internal/pkg/ratelimit"
 	"profile-service/internal/pkg/retry"
 
 	"github.com/ilyakaznacheev/cleanenv"
@@ -31,9 +32,10 @@ type Config struct {
 	RedisCluster RedisCluster `yaml:"redis_cluster"`
 	Cache        Cache        `yaml:"cache"`
 
-	Graceful Graceful          `yaml:"graceful"`
-	Retry    retry.Config      `yaml:"retry"`
-	Targets  map[string]string `yaml:"service"`
+	Graceful  Graceful          `yaml:"graceful"`
+	Retry     retry.Config      `yaml:"retry"`
+	RateLimit ratelimit.Config  `yaml:"rate_limit"`
+	Targets   map[string]string `yaml:"service"`
 }
 
 func Instance() *Config {
