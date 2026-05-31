@@ -1,0 +1,5 @@
+132
+profile
+/profile_service.order.v1.ProfileService/GetProfile
+{"content-type":["application/grpc"],"x-client-name":["api-gateway"]}
+

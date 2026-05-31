@@ -7,6 +7,8 @@ import (
 	"strings"
 	"sync"
 
+	"profile-service/internal/pkg/retry"
+
 	"github.com/ilyakaznacheev/cleanenv"
 )
 
@@ -30,6 +32,7 @@ type Config struct {
 	Cache        Cache        `yaml:"cache"`
 
 	Graceful Graceful          `yaml:"graceful"`
+	Retry    retry.Config      `yaml:"retry"`
 	Targets  map[string]string `yaml:"service"`
 }
 
