@@ -66,6 +66,7 @@ func New(task *entity.Task) pipe.Func[event.Events] {
 		}
 
 		return append(batch, event.Event{
+			EntityID: task.ID.String(),
 			Key:     event.Raw(task.ID.String()),
 			Body:    body,
 			Headers: headersRaw,

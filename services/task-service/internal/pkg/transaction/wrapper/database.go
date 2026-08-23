@@ -37,7 +37,10 @@ func NewDatabase(pool *pgxpool.Pool) Database {
 
 func initTx(ctx context.Context, tx *abstract.Tx, pool *pgxpool.Pool) Executor {
 	return tx.WithTx(ctx, func(ctx context.Context) abstract.Transaction {
-		opts := tx.Args().(*pgx.TxOptions)
+		var opts *pgx.TxOptions
+		if tx.Args() != nil {
+			opts = tx.Args().(*pgx.TxOptions)
+		}
 		return NewTransaction(ctx, pool, opts)
 	}).(Executor)
 }

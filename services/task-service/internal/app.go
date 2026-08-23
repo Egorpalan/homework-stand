@@ -19,6 +19,8 @@ import (
 	"task-service/internal/infrastructure/storage"
 	"task-service/internal/pkg/closer"
 	"task-service/internal/pkg/healthcheck"
+	"task-service/internal/pkg/outbox"
+	"task-service/internal/pkg/worker"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -49,6 +51,9 @@ type App struct {
 	gateways *gateway.Registry
 
 	messageBus *messagebus.Registry
+
+	outbox       *outbox.Outbox
+	messageRelay worker.Worker
 
 	services *service.Registry
 
@@ -92,7 +97,7 @@ func New(ctx context.Context) *App {
 }
 
 // Run запуск приложения
-func (a *App) Run(_ context.Context) {
+func (a *App) Run(ctx context.Context) {
 	if a.mainServer != nil {
 		go func() {
 			if err := a.mainServer.Run(a.controllers...); err != nil {
@@ -100,6 +105,13 @@ func (a *App) Run(_ context.Context) {
 				a.publicCloser.CloseAll()
 			}
 		}()
+	}
+
+	if a.messageRelay != nil {
+		err := a.messageRelay.Start(ctx)
+		if err != nil {
+			slog.Error(fmt.Sprintf("message relay: %s", err.Error()))
+		}
 	}
 
 	// start signal
@@ -144,6 +156,7 @@ func (a *App) init(ctx context.Context) error {
 		a.initMessageBus,
 		a.initGateways,
 		a.initStorages,
+		a.initOutbox,
 		a.initServices,
 		a.initMainServer,
 		a.initControllers,

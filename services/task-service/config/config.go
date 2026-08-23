@@ -29,6 +29,7 @@ type Config struct {
 	Postgres   Postgres   `yaml:"postgres"`
 	Kafka      Kafka      `yaml:"kafka"`
 
+	Outbox     Outbox            `yaml:"outbox"`
 	Graceful   Graceful          `yaml:"graceful"`
 	Targets    map[string]string `yaml:"service"`
 	Categories Categories        `yaml:"categories"`
@@ -75,4 +76,8 @@ func (c Config) PostgresDSN() string {
 		c.Postgres.Port,
 		c.Postgres.Database,
 	)
+}
+
+func (c Config) OutboxConfig(topic string) OutboxHandler {
+	return c.Outbox.Topics[topic]
 }
