@@ -6,8 +6,8 @@ import (
 	"task-service/internal/application/service/task/get_task"
 	"task-service/internal/application/service/task/list_tasks"
 	"task-service/internal/infrastructure/gateway"
-	"task-service/internal/infrastructure/messagebus"
 	"task-service/internal/infrastructure/storage"
+	"task-service/internal/pkg/outbox"
 )
 
 type Registry struct {
@@ -17,13 +17,13 @@ type Registry struct {
 	GetCategories *get_categories.Service
 }
 
-func NewRegistry(storage *storage.Registry, gateway *gateway.Registry, messageBus *messagebus.Registry) *Registry {
+func NewRegistry(storage *storage.Registry, gateway *gateway.Registry, outbox *outbox.Outbox) *Registry {
 	return &Registry{
 		CreateTask: create_task.NewService(
 			storage.Task,
 			storage.Category,
 			gateway.Profile,
-			messageBus.Producers.TaskEvents,
+			outbox,
 		),
 		GetTask:       get_task.NewService(storage.Task),
 		ListTasks:     list_tasks.NewService(storage.Task),

@@ -8,18 +8,22 @@ import (
 	"net/http"
 	"runtime"
 	"sync/atomic"
+	"time"
 
 	"task-service/config"
 	v1 "task-service/internal/app/task/v1"
 	service "task-service/internal/application/service/task"
 	"task-service/internal/infrastructure/gateway"
 	"task-service/internal/infrastructure/messagebus"
+	"task-service/internal/infrastructure/outbox/task_events"
 	"task-service/internal/infrastructure/storage"
 	"task-service/internal/pkg/closer"
 	"task-service/internal/pkg/connector/postgres"
 	"task-service/internal/pkg/grpc/intercept"
 	"task-service/internal/pkg/healthcheck"
+	"task-service/internal/pkg/outbox"
 	taskV1 "task-service/internal/pkg/pb/task-service/task/v1"
+	"task-service/internal/pkg/worker"
 
 	"github.com/go-chi/chi/v5"
 	chimw "github.com/go-chi/chi/v5/middleware"
@@ -50,6 +54,29 @@ func (a *App) initPostgres(ctx context.Context) error {
 	return nil
 }
 
+func (a *App) initOutbox(ctx context.Context) error {
+	a.outbox = outbox.NewOutbox(a.pool, config.Instance().Outbox.Limits, outbox.WithMetrics())
+
+	a.outbox.RegisterHandler(task_events.NewHandler(
+		config.TaskEventsTopic,
+		config.Instance().OutboxConfig(config.TaskEventsTopic).BatchSize,
+		a.messageBus.Producers.TaskEvents,
+	))
+
+	a.messageRelay = worker.NewWorker(ctx,
+		a.outbox.HandlePendingMessages,
+		func(ctx context.Context) time.Duration {
+			return config.Instance().OutboxConfig(config.TaskEventsTopic).Worker.Interval
+		},
+		func(ctx context.Context) int {
+			return config.Instance().OutboxConfig(config.TaskEventsTopic).Worker.Concurrency
+		},
+	)
+
+	closer.Add(a.messageRelay.Stop)
+	return nil
+}
+
 func (a *App) initMessageBus(_ context.Context) error {
 	if a.messageBus == nil {
 		a.messageBus = messagebus.NewRegistry()
@@ -70,7 +97,7 @@ func (a *App) initStorages(ctx context.Context) error {
 
 func (a *App) initServices(_ context.Context) error {
 	if a.services == nil {
-		a.services = service.NewRegistry(a.storages, a.gateways, a.messageBus)
+		a.services = service.NewRegistry(a.storages, a.gateways, a.outbox)
 	}
 	return nil
 }

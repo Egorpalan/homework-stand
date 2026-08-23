@@ -4,8 +4,8 @@ import (
 	"context"
 	"encoding/json"
 
-	"task-service/internal/pkg/connector/kafka"
-	"task-service/internal/pkg/event"
+	"analytic-service/internal/pkg/connector/kafka"
+	"analytic-service/internal/pkg/event"
 
 	"github.com/IBM/sarama"
 	"github.com/samber/lo"
@@ -23,11 +23,11 @@ func (m *MessageProducer) Close() error {
 	return m.producer.Close()
 }
 
-func (m *MessageProducer) Handle(_ context.Context, events event.Events) error {
+func (m *MessageProducer) Flush(_ context.Context, events event.Events) error {
 	return m.producer.SendMessages(lo.Map(events, func(msg event.Event, _ int) *sarama.ProducerMessage {
 		return &sarama.ProducerMessage{
 			Topic:   msg.Schema,
-			Key:     sarama.StringEncoder(msg.Key),
+			Key:     sarama.ByteEncoder(msg.Key),
 			Headers: m.parseHeaders(msg.Headers),
 			Value:   sarama.ByteEncoder(msg.Body),
 		}
@@ -40,8 +40,7 @@ func (m *MessageProducer) parseHeaders(headers event.Raw) []sarama.RecordHeader 
 		return nil
 	}
 
-	var records = make([]sarama.RecordHeader, 0, len(mapped))
-
+	records := make([]sarama.RecordHeader, 0, len(mapped))
 	for key, value := range mapped {
 		records = append(records, sarama.RecordHeader{
 			Key:   []byte(key),
