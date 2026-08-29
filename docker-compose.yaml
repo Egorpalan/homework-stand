@@ -53,6 +53,8 @@ services:
     depends_on:
       analytic-service:
         condition: service_started
+      kafka:
+        condition: service_healthy
       profile-redis-oss-creator:
         condition: service_completed_successfully
       profile-service-migrations:
@@ -421,6 +423,19 @@ services:
       interval: 1s
       timeout: 2s
       retries: 5
+    networks:
+      - app-network
+
+  kafka-init:
+    image: confluentinc/cp-kafka:7.5.0
+    depends_on:
+      kafka:
+        condition: service_healthy
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic task-events --partitions 3 --replication-factor 1
+        kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic user-tariff-invalidate --partitions 3 --replication-factor 1
     networks:
       - app-network
 

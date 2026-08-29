@@ -7,17 +7,23 @@ import (
 	"net"
 	"runtime"
 	"sync/atomic"
+	"time"
 
 	"analytic-service/config"
 	v1 "analytic-service/internal/app/analytic/v1"
 	"analytic-service/internal/applicaton/service"
 	"analytic-service/internal/infrastructure/messagebus"
+	mbproducer "analytic-service/internal/infrastructure/messagebus/producer"
+	"analytic-service/internal/infrastructure/outbox/user_tariff_invalidate"
 	"analytic-service/internal/infrastructure/storage"
 	"analytic-service/internal/pkg/chaos"
+	"analytic-service/internal/pkg/closer"
 	"analytic-service/internal/pkg/connector/postgres"
 	"analytic-service/internal/pkg/grpc/intercept"
 	"analytic-service/internal/pkg/healthcheck"
+	"analytic-service/internal/pkg/outbox"
 	analyticV1 "analytic-service/internal/pkg/pb/analytic-service/analytic/v1"
+	"analytic-service/internal/pkg/worker"
 
 	"github.com/go-chi/chi/v5"
 	chimw "github.com/go-chi/chi/v5/middleware"
@@ -55,9 +61,33 @@ func (a *App) initStorages(_ context.Context) error {
 	return nil
 }
 
+func (a *App) initOutbox(ctx context.Context) error {
+	producers := mbproducer.NewProducers()
+	closer.Add(producers.UserTariffInvalidate.Close)
+
+	a.outbox = outbox.NewOutbox(a.pool, config.Instance().Outbox.Limits)
+	a.outbox.RegisterHandler(user_tariff_invalidate.NewHandler(
+		config.UserTariffInvalidateTopic,
+		config.Instance().OutboxConfig(config.UserTariffInvalidateTopic).BatchSize,
+		producers.UserTariffInvalidate,
+	))
+
+	a.messageRelay = worker.NewWorker(ctx,
+		a.outbox.HandlePendingMessages,
+		func(context.Context) time.Duration {
+			return config.Instance().OutboxConfig(config.UserTariffInvalidateTopic).Worker.Interval
+		},
+		func(context.Context) int {
+			return config.Instance().OutboxConfig(config.UserTariffInvalidateTopic).Worker.Concurrency
+		},
+	)
+	closer.Add(a.messageRelay.Stop)
+	return nil
+}
+
 func (a *App) initServices(_ context.Context) error {
 	if a.services == nil {
-		a.services = service.NewRegistry(a.storages)
+		a.services = service.NewRegistry(a.storages, a.outbox)
 	}
 	return nil
 }

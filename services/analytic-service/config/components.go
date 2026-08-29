@@ -1,6 +1,10 @@
 package config
 
-import "time"
+import (
+	"time"
+
+	"analytic-service/internal/pkg/outbox"
+)
 
 type GrpcServer struct {
 	Host              string        `yaml:"host"`
@@ -35,6 +39,21 @@ type HttpServer struct {
 
 type Graceful struct {
 	Timeout time.Duration `yaml:"timeout"`
+}
+
+type Outbox struct {
+	Limits outbox.Config            `yaml:"limits"`
+	Topics map[string]OutboxHandler `yaml:"topics"`
+}
+
+type OutboxHandler struct {
+	BatchSize int    `yaml:"batch_size"`
+	Worker    Worker `yaml:"worker"`
+}
+
+type Worker struct {
+	Interval    time.Duration `yaml:"interval"`
+	Concurrency int           `yaml:"concurrency"`
 }
 
 type Categories struct {

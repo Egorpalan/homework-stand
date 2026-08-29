@@ -20,6 +20,8 @@ import (
 	"analytic-service/internal/infrastructure/messagebus"
 	"analytic-service/internal/pkg/closer"
 	"analytic-service/internal/pkg/healthcheck"
+	"analytic-service/internal/pkg/outbox"
+	"analytic-service/internal/pkg/worker"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -45,6 +47,9 @@ type App struct {
 	storages *storage.Registry
 
 	messageBus *messagebus.Registry
+
+	outbox       *outbox.Outbox
+	messageRelay worker.Worker
 
 	services *service.Registry
 
@@ -85,6 +90,11 @@ func New(ctx context.Context) *App {
 // Run запуск приложения
 func (a *App) Run(ctx context.Context) {
 	a.messageBus.Run(ctx)
+	if a.messageRelay != nil {
+		if err := a.messageRelay.Start(ctx); err != nil {
+			slog.Error(fmt.Sprintf("message relay: %s", err.Error()))
+		}
+	}
 	if a.mainServer != nil {
 		go func() {
 			if err := a.mainServer.Run(a.controllers...); err != nil {
@@ -133,6 +143,7 @@ func (a *App) init(ctx context.Context) error {
 	initFuncs := []func(context.Context) error{
 		a.initPostgres,
 		a.initStorages,
+		a.initOutbox,
 		a.initServices,
 		a.initMainServer,
 		a.initControllers,

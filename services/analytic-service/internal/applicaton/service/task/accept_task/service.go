@@ -4,6 +4,9 @@ import (
 	"context"
 
 	"analytic-service/internal/domain/entity"
+	"analytic-service/internal/events/tariff_invalidated"
+	"analytic-service/internal/pkg/event"
+	"analytic-service/internal/pkg/transaction"
 )
 
 type Creator interface {
@@ -12,10 +15,11 @@ type Creator interface {
 
 type Service struct {
 	storage Creator
+	flusher event.Flusher
 }
 
-func NewService(storage Creator) *Service {
-	return &Service{storage: storage}
+func NewService(storage Creator, flusher event.Flusher) *Service {
+	return &Service{storage: storage, flusher: flusher}
 }
 
 func (s *Service) Create(ctx context.Context, request CreateTaskRequest) error {
@@ -30,5 +34,13 @@ func (s *Service) Create(ctx context.Context, request CreateTaskRequest) error {
 		request.price,
 	)
 
-	return s.storage.InsertTask(ctx, task)
+	buf, ctx := event.WithContext(ctx, s.flusher)
+	event.Add(ctx, tariff_invalidated.New(request.userID))
+
+	return transaction.Exec(ctx, func(ctx context.Context) error {
+		if err := s.storage.InsertTask(ctx, task); err != nil {
+			return err
+		}
+		return buf.Flush(ctx)
+	})
 }
