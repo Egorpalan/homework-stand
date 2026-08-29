@@ -14,7 +14,7 @@ COPY go.mod go.sum ./
 RUN go mod download
 
 ENV GOBIN=/app/bin
-RUN go install github.com/pressly/goose/v3/cmd/goose@latest
+RUN go install github.com/pressly/goose/v3/cmd/goose@v3.26.0
 
 # Копируем файлы для миграций
 COPY tools/migrations ./tools/migrations

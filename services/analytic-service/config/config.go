@@ -11,7 +11,8 @@ import (
 )
 
 const (
-	TaskEventsTopic = "task-events"
+	TaskEventsTopic           = "task-events"
+	UserTariffInvalidateTopic = "user-tariff-invalidate"
 )
 
 var (
@@ -24,6 +25,7 @@ type Config struct {
 	HttpServer HttpServer `yaml:"http_server"`
 	Postgres   Postgres   `yaml:"postgres"`
 	Kafka      Kafka      `yaml:"kafka"`
+	Outbox     Outbox     `yaml:"outbox"`
 
 	Graceful   Graceful          `yaml:"graceful"`
 	Targets    map[string]string `yaml:"service"`
@@ -71,4 +73,8 @@ func (c Config) PostgresDSN() string {
 		c.Postgres.Port,
 		c.Postgres.Database,
 	)
+}
+
+func (c Config) OutboxConfig(topic string) OutboxHandler {
+	return c.Outbox.Topics[topic]
 }

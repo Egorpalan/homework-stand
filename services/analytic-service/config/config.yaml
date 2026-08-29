@@ -16,6 +16,18 @@ kafka:
   brokers: [ "kafka:9092" ]
   consumer_group: worker-service-task-events
 
+outbox:
+  limits:
+    locked_keys_limit: 100
+    messages_limit: 1000
+    max_err_count_for_message: 5
+  topics:
+    user-tariff-invalidate:
+      batch_size: 100
+      worker:
+        interval: 5s
+        concurrency: 1
+
 postgres:
   host: analytic-postgres
   port: 5432

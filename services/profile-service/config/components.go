@@ -23,6 +23,11 @@ type Postgres struct {
 	MaxConnLifetime    time.Duration `yaml:"max_conn_lifetime"`
 }
 
+type Kafka struct {
+	Brokers       []string `yaml:"brokers"`
+	ConsumerGroup string   `yaml:"consumer_group"`
+}
+
 type RedisCluster struct {
 	Addresses    []string      `yaml:"addresses"`
 	MaxRetries   int           `yaml:"max_retries"`

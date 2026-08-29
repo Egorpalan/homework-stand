@@ -4,39 +4,37 @@ import (
 	"context"
 
 	"profile-service/internal/domain/entity"
+	"profile-service/internal/domain/value_object"
 )
 
 type ProfileProvider interface {
 	GetProfile(ctx context.Context, userID int64) (*entity.Profile, error)
 }
 
-type TaskProvider interface {
-	GetUserTaskCount(ctx context.Context, userID int64) (uint64, error)
+type TariffProvider interface {
+	GetTariff(ctx context.Context, userID int64) (value_object.Tariff, error)
 }
 
 type Service struct {
 	profileProvider ProfileProvider
-	taskProvider    TaskProvider
+	tariffProvider  TariffProvider
 }
 
-func NewService(profileProvider ProfileProvider, taskProvider TaskProvider) *Service {
-	return &Service{profileProvider: profileProvider, taskProvider: taskProvider}
+func NewService(profileProvider ProfileProvider, tariffProvider TariffProvider) *Service {
+	return &Service{profileProvider: profileProvider, tariffProvider: tariffProvider}
 }
 
 func (s *Service) GetProfile(ctx context.Context, userID int64) (*entity.Profile, error) {
-	// получаем профиль
 	profile, err := s.profileProvider.GetProfile(ctx, userID)
 	if err != nil {
 		return nil, err
 	}
 
-	// получаем кол-во задач
-	taskCount, err := s.taskProvider.GetUserTaskCount(ctx, userID)
+	tariff, err := s.tariffProvider.GetTariff(ctx, userID)
 	if err != nil {
 		return nil, err
 	}
 
-	profile.WithTariff(taskCount)
-
+	profile.Tariff = tariff
 	return profile, nil
 }

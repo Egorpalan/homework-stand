@@ -16,6 +16,7 @@ import (
 	"profile-service/internal/application/service"
 	"profile-service/internal/infrastructure/adapter"
 	"profile-service/internal/infrastructure/gateway"
+	"profile-service/internal/infrastructure/messagebus"
 	"profile-service/internal/infrastructure/storage"
 	"profile-service/internal/pkg/closer"
 	pkgredis "profile-service/internal/pkg/connector/redis"
@@ -53,6 +54,8 @@ type App struct {
 
 	gateways *gateway.Registry
 
+	messageBus *messagebus.Registry
+
 	services *service.Registry
 
 	started    int32
@@ -87,7 +90,10 @@ func New(ctx context.Context) *App {
 }
 
 // Run запуск приложения
-func (a *App) Run(_ context.Context) {
+func (a *App) Run(ctx context.Context) {
+	if a.messageBus != nil {
+		a.messageBus.Run(ctx)
+	}
 	if a.mainServer != nil {
 		go func() {
 			if err := a.mainServer.Run(a.controllers...); err != nil {
@@ -140,6 +146,7 @@ func (a *App) init(ctx context.Context) error {
 		a.initStorages,
 		a.initGateways,
 		a.initAdapter,
+		a.initMessageBus,
 		a.initMainServer,
 		a.initServices,
 		a.initControllers,

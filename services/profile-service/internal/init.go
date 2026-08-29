@@ -13,6 +13,7 @@ import (
 	"profile-service/internal/application/service"
 	"profile-service/internal/infrastructure/adapter"
 	"profile-service/internal/infrastructure/gateway"
+	"profile-service/internal/infrastructure/messagebus"
 	"profile-service/internal/infrastructure/storage"
 	"profile-service/internal/pkg/closer"
 	"profile-service/internal/pkg/connector/postgres"
@@ -70,14 +71,14 @@ func (a *App) initStorages(_ context.Context) error {
 
 func (a *App) initServices(_ context.Context) error {
 	if a.services == nil {
-		a.services = service.NewRegistry(a.storages, a.gateways, a.adapters)
+		a.services = service.NewRegistry(a.storages, a.adapters)
 	}
 	return nil
 }
 
 func (a *App) initAdapter(_ context.Context) error {
 	if a.adapters == nil {
-		a.adapters = adapter.NewRegistry(a.redis, a.storages)
+		a.adapters = adapter.NewRegistry(a.redis, a.storages, a.gateways)
 	}
 	return nil
 }
@@ -85,6 +86,13 @@ func (a *App) initAdapter(_ context.Context) error {
 func (a *App) initGateways(_ context.Context) error {
 	if a.gateways == nil {
 		a.gateways = gateway.NewRegistry(a.grpcConn)
+	}
+	return nil
+}
+
+func (a *App) initMessageBus(_ context.Context) error {
+	if a.messageBus == nil {
+		a.messageBus = messagebus.NewRegistry(a.adapters)
 	}
 	return nil
 }

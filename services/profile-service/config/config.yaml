@@ -13,7 +13,7 @@ http_server:
   port: 8082
 
 postgres:
-  host: localhost
+  host: profile-postgres
   port: 5432
   user: postgres
   password: "postgres"
@@ -26,10 +26,14 @@ postgres:
 cache:
   key_version: v1
   soft_ttl: 5m
-  hard_ttl: 10m
+  hard_ttl: 15m
   jitter_percentage: 0.3
   negative:
     not_found_ttl: 30s
+
+kafka:
+  brokers: [ "kafka:9092" ]
+  consumer_group: profile-service-tariff-invalidate
 
 redis_cluster:
   addresses:

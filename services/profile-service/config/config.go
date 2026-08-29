@@ -14,6 +14,8 @@ const (
 	AppName = "profile-service"
 
 	AnalyticService = "analytic-service"
+
+	UserTariffInvalidateTopic = "user-tariff-invalidate"
 )
 
 var (
@@ -26,6 +28,7 @@ type Config struct {
 	HttpServer HttpServer `yaml:"http_server"`
 
 	Postgres     Postgres     `yaml:"postgres"`
+	Kafka        Kafka        `yaml:"kafka"`
 	RedisCluster RedisCluster `yaml:"redis_cluster"`
 	Cache        Cache        `yaml:"cache"`
 
